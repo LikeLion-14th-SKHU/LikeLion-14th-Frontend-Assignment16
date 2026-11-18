@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import SearchBox from '../components/SearchBox.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import ScheduleStatus from '../components/ScheduleStatus.jsx'
 import DdayBadge from '../components/DdayBadge.jsx'
 import FavoriteButton from '../components/FavoriteButton.jsx'
 import { useFavorites } from '../hooks/useFavorites.js'
@@ -28,9 +29,9 @@ function Home() {
           🔥 곧 마감
         </h2>
         <p className="mb-3 text-sm text-ink-muted">지금 접수 중이거나 7일 안에 접수가 시작돼요</p>
-        <ScheduleState status={status} error={error}>
+        <ScheduleStatus status={status} error={error}>
           <ClosingSoon roundsByGrade={roundsByGrade} today={today} favorites={favorites} />
-        </ScheduleState>
+        </ScheduleStatus>
       </section>
 
       <section aria-labelledby="my-dday">
@@ -59,20 +60,6 @@ function Home() {
       </section>
     </div>
   )
-}
-
-function ScheduleState({ status, error, children }) {
-  if (status === 'loading') {
-    return <div aria-busy="true" aria-label="일정 불러오는 중" className="h-24 animate-pulse rounded-2xl bg-canvas" />
-  }
-  if (status === 'error') {
-    return (
-      <EmptyState icon="⚠️" title="일정을 불러오지 못했어요">
-        {error.message}
-      </EmptyState>
-    )
-  }
-  return children
 }
 
 function ClosingSoon({ roundsByGrade, today, favorites }) {

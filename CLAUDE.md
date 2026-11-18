@@ -92,7 +92,8 @@ docs/
 - 서비스키는 환경변수 `DATA_GO_KR_KEY`에만 둬요. `VITE_` 접두사를 붙이면 브라우저 번들에 포함되므로 절대 붙이지 않아요. `.env*` 파일은 커밋하지 않아요.
 - 프록시 응답에는 `Cache-Control: s-maxage=86400`을 걸어 호출 한도를 아껴요.
 - **API 필드 이름을 추측하지 않아요.** 확인된 파라미터와 응답 필드는 `docs/기획서.md` 1-1절에 있어요. 거기에 없는 필드를 쓰려면 먼저 실제로 호출해서 확인하고 1-1절에 기록해요.
-- API 핵심 사실: `implYy`는 필수예요. `numOfRows`는 최대 50이고, 날짜는 `YYYYMMDD` 문자열(없으면 `""`)이에요. 오류도 HTTP 200에 `header.resultCode !== "00"`으로 와요. **응답에 종목명이 없고**, 일정은 등급(기사, 기능사 등)·회차 단위로 와요. 프록시는 `resultCode`가 `"00"`이 아니면 502와 `no-store`로 돌려줘요.
+- API 핵심 사실: `implYy`는 필수예요. `numOfRows`는 최대 50이고, 날짜는 `YYYYMMDD` 문자열(없으면 `""`)이에요. 오류도 HTTP 200에 `header.resultCode !== "00"`으로 와요. **응답에 종목명이 없고**, 일정은 등급(기사, 기능사 등)·회차 단위로 와요. 프록시는 `resultCode`가 `"00"`이 아니면 502와 `no-store`로 돌려줘요. 게이트웨이 오류(`OpenAPI_ServiceResponse`)는 `dataFormat`에 따라 XML이나 JSON으로 오는데, 프록시가 둘 다 `{ header: { resultCode, resultMsg } }`로 바꿔요. 화면에 보일 오류 문구는 `lib/api.js`의 `errorMessage()`에서 한국어로 바꿔요.
+- 일정 API를 쓰는 화면의 로딩과 오류는 `components/ScheduleStatus.jsx`로 처리해요. 페이지 렌더링 오류는 `Layout`의 `ErrorBoundary`가 잡아요.
 - **종목과 일정의 연결** (기획서 1-2절): 종목 목록(`src/data/certs.json`)에도 종목 코드가 없어요. 국가기술자격의 계열명(기술사, 기능장, 기사, 기능사)을 일정 `description`의 등급과 맞춰서 연결해요(`lib/schedule.js`의 `gradeOf`). 산업기사는 "기사"에 속하므로 화면에는 `scheduleLabel()`로 "기사·산업기사 일정"이라고 표시해요. 국가전문자격은 일정과 연결할 수 없어서 "일정 미제공"으로 표시해요. 회차는 `groupRounds()`로 묶어요. 필기 접수 기간만 다른 행만 합치는데, 기능사는 같은 회차 번호에 다른 일정이 있기 때문이에요.
 - 관심 자격증은 `useFavorites()`로만 읽고 써요. localStorage 키는 `cert-dday:favorites`(종목명 배열)이고, `useSyncExternalStore`로 모든 컴포넌트와 다른 탭이 같은 값을 봐요. 저장소 접근은 항상 try/catch로 감싸요.
 - D-day와 곧 마감 계산은 `lib/dday.js`의 순수 함수예요. `nextMilestone`은 진행 중인 기간이면 끝나는 날, 아직 안 온 기간이면 시작하는 날을 기준으로 해요. `registrationAlerts`는 접수 중이거나 7일 안에 접수가 시작되는 회차를 모아요. 일정은 등급 공통이라서 화면 문구에 특정 종목이 그 회차에 시행된다고 단정하지 않아요("같은 등급"으로 표시해요).

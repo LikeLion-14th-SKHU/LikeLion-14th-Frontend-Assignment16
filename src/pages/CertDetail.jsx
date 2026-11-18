@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import EmptyState from '../components/EmptyState.jsx'
 import FavoriteButton from '../components/FavoriteButton.jsx'
 import RoundCard from '../components/RoundCard.jsx'
+import ScheduleStatus from '../components/ScheduleStatus.jsx'
 import NotFound from './NotFound.jsx'
 import { useExamSchedule } from '../hooks/useExamSchedule.js'
 import { findCert, hasSchedule, scheduleLabel } from '../lib/certs.js'
@@ -45,29 +46,8 @@ function Schedule({ grade, label }) {
   const { status, items, error } = useExamSchedule()
   const [showPast, setShowPast] = useState(false)
 
-  if (status === 'loading') {
-    return (
-      <div className="space-y-3" aria-busy="true" aria-label="일정 불러오는 중">
-        {[0, 1].map((i) => (
-          <div key={i} className="h-40 animate-pulse rounded-2xl bg-canvas" />
-        ))}
-      </div>
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <EmptyState icon="⚠️" title="일정을 불러오지 못했어요">
-        {error.message}{' '}
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="font-medium text-brand-600 underline"
-        >
-          다시 시도
-        </button>
-      </EmptyState>
-    )
+  if (status !== 'success') {
+    return <ScheduleStatus status={status} error={error} skeleton="h-72" />
   }
 
   const rounds = groupRounds(items.filter((item) => gradeOf(item) === grade))

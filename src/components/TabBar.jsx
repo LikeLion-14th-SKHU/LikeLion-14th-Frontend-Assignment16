@@ -19,12 +19,14 @@ function TabBar() {
               to={tab.to}
               end={tab.end}
               className={({ isActive }) =>
-                `flex h-full flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
-                  isActive ? 'text-brand-600' : 'text-ink-muted hover:text-ink'
+                `relative flex h-full flex-col items-center justify-center gap-0.5 text-xs transition-colors ${
+                  isActive
+                    ? 'font-bold text-brand-600 before:absolute before:inset-x-6 before:top-0 before:h-0.5 before:rounded-full before:bg-brand-600'
+                    : 'font-medium text-ink-muted hover:text-ink [&>span]:opacity-50 [&>span]:grayscale'
                 }`
               }
             >
-              <span aria-hidden="true" className="text-xl leading-none">
+              <span aria-hidden="true" className="text-xl leading-none transition">
                 {tab.icon}
               </span>
               {tab.label}
