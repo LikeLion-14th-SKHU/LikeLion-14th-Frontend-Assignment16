@@ -36,7 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|---|---|
 | 홈 | `/` | 검색창 → 곧 마감 → 내 자격증 D-day 카드 |
 | 검색 | `/search?q=` | 결과 목록 + ⭐ 담기 |
-| 상세 | `/cert/:종목코드` | 회차별 일정 표 + ⭐ 담기 |
+| 상세 | `/cert/:종목명` | 회차별 일정 카드 + ⭐ 담기 |
 | 캘린더 | `/calendar` | 월 이동, 전체·관심 필터, 월간 그리드 |
 
 **디자인:** 깔끔한 생산성 앱 스타일이에요. 흰 배경, 남색 포인트, Pretendard 글꼴을 써요. 접수·시험·발표는 각각 고정된 색으로 표시하고 모든 화면에서 같은 색을 써요. 긴급도 배지는 D-3 이하 빨강, D-7 이하 주황이에요.
@@ -53,6 +53,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `npm run dev`: 개발 서버를 실행해요. `vite.config.js`의 `localApi` 플러그인이 `/api/<이름>`을 `api/<이름>.js`의 `GET` 함수로 처리해서, Vercel CLI 없이도 프록시가 동작해요. 서비스키는 `.env.local`의 `DATA_GO_KR_KEY`에서 읽어요(`.env.example` 참고).
 - `api/*.js`는 Web 표준 형식(`export function GET(request)` → `Response` 반환)으로 써요. 이 형식이어야 로컬 플러그인과 Vercel 양쪽에서 똑같이 동작해요. Node의 `(req, res)` 형식은 쓰지 않아요.
+- `npm run data:certs`: `docs/`의 종목 목록 CSV(EUC-KR)를 UTF-8 `src/data/certs.json`으로 변환해요. `certs.json`은 직접 고치지 말고 CSV를 바꾼 뒤 이 명령으로 다시 만들어요.
 - `npm run build` / `npm run preview`
 - `npm run lint`
 - 테스트 러너는 없어요.
@@ -67,9 +68,13 @@ src/
   components/         # 카드, 배지, 탭바, 달력 그리드 등
   hooks/              # useFavorites (localStorage), useExamSchedule (fetch)
   lib/                # dday.js (날짜 계산), api.js (fetch 래퍼)
+  data/certs.json     # 종목 목록 (npm run data:certs로 생성)
   index.css           # Tailwind import + @theme 토큰
+scripts/
+  build-certs.mjs     # CSV(EUC-KR) → certs.json
 docs/
   기획서.md
+  한국산업인력공단_국가자격 종목 목록 정보_*.csv   # 원본 (EUC-KR)
 ```
 
 디자인 토큰 이름: `brand-*`(남색 포인트), `surface`/`canvas`/`line`/`ink`/`ink-muted`(바탕·글자), `apply`/`exam`/`result`와 각각의 `-soft`(접수·시험·발표), `urgent`/`soon`과 각각의 `-soft`(긴급도). 예: `bg-apply-soft text-apply`. 공통 빈 상태 화면은 `components/EmptyState.jsx`를 써요.
@@ -88,6 +93,8 @@ docs/
 - 프록시 응답에는 `Cache-Control: s-maxage=86400`을 걸어 호출 한도를 아껴요.
 - **API 필드 이름을 추측하지 않아요.** 확인된 파라미터와 응답 필드는 `docs/기획서.md` 1-1절에 있어요. 거기에 없는 필드를 쓰려면 먼저 실제로 호출해서 확인하고 1-1절에 기록해요.
 - API 핵심 사실: `implYy`는 필수예요. `numOfRows`는 최대 50이고, 날짜는 `YYYYMMDD` 문자열(없으면 `""`)이에요. 오류도 HTTP 200에 `header.resultCode !== "00"`으로 와요. **응답에 종목명이 없고**, 일정은 등급(기사, 기능사 등)·회차 단위로 와요. 프록시는 `resultCode`가 `"00"`이 아니면 502와 `no-store`로 돌려줘요.
+- **종목과 일정의 연결** (기획서 1-2절): 종목 목록(`src/data/certs.json`)에도 종목 코드가 없어요. 국가기술자격의 계열명(기술사, 기능장, 기사, 기능사)을 일정 `description`의 등급과 맞춰서 연결해요(`lib/schedule.js`의 `gradeOf`). 산업기사는 "기사"에 속하므로 화면에는 `scheduleLabel()`로 "기사·산업기사 일정"이라고 표시해요. 국가전문자격은 일정과 연결할 수 없어서 "일정 미제공"으로 표시해요. 회차는 `groupRounds()`로 묶어요. 필기 접수 기간만 다른 행만 합치는데, 기능사는 같은 회차 번호에 다른 일정이 있기 때문이에요.
+- 일정 데이터는 `useExamSchedule()`로만 받아요. 올해와 내년의 국가기술자격 일정을 한 번만 받아서 모듈 캐시로 페이지끼리 공유해요. 페이지마다 따로 fetch하지 않아요.
 - 달력과 날짜 계산은 라이브러리 없이 기본 `Date`로 구현해요. D-day는 시간을 빼고 날짜 단위로 계산해요.
 - 색은 `@theme` 토큰으로만 써요. 컴포넌트에 hex 값을 직접 쓰지 않아요.
 
