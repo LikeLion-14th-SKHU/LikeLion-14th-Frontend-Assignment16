@@ -1,16 +1,18 @@
 import { Link, Outlet, useLocation } from 'react-router'
 import ErrorBoundary from './ErrorBoundary.jsx'
 import TabBar from './TabBar.jsx'
+import ThemeToggle from './ThemeToggle.jsx'
 
 function Layout() {
   const location = useLocation()
   return (
     <div className="mx-auto flex min-h-dvh max-w-screen-sm flex-col bg-surface">
       <header className="sticky top-0 z-10 border-b border-line bg-surface/90 backdrop-blur">
-        <div className="flex h-14 items-center px-4">
+        <div className="flex h-14 items-center justify-between pr-2 pl-4">
           <Link to="/" className="text-lg font-bold text-brand-700">
             🎓 자격증 D-day
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 

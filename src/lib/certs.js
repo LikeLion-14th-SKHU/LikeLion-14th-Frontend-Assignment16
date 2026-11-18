@@ -38,6 +38,24 @@ export function scheduleLabel(cert) {
   return cert.grade === '기사' ? '기사·산업기사 일정' : `${cert.grade} 일정`
 }
 
+// 등급별 둘러보기 묶음. (분야별 분류는 "국가자격 계열 관련 정보" API가 있어야 해서 아직 없어요)
+export const BROWSE_GROUPS = [
+  { id: '기사', label: '기사·산업기사', match: (c) => c.grade === '기사' },
+  { id: '기능사', label: '기능사', match: (c) => c.grade === '기능사' },
+  { id: '기능장', label: '기능장', match: (c) => c.grade === '기능장' },
+  { id: '기술사', label: '기술사', match: (c) => c.grade === '기술사' },
+  { id: '전문', label: '국가전문자격', match: (c) => c.qualgbCd === 'S' },
+].map((group) => ({ ...group, count: certs.filter(group.match).length }))
+
+export function listGroup(id) {
+  const group = BROWSE_GROUPS.find((g) => g.id === id)
+  if (!group) return null
+  return {
+    group,
+    certs: certs.filter(group.match).sort((a, b) => a.name.localeCompare(b.name, 'ko')),
+  }
+}
+
 export function certPath(cert) {
   return `/cert/${encodeURIComponent(cert.name)}`
 }

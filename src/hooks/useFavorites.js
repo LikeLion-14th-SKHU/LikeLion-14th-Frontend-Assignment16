@@ -55,5 +55,10 @@ export function useFavorites() {
     // 새로 담은 자격증이 앞에 오게 해요
     toggle: (name) =>
       write(names.includes(name) ? names.filter((n) => n !== name) : [name, ...names]),
+    // 공유 받은 목록 담기: 이미 있는 건 건너뛰고 새것만 앞에 붙여요
+    addAll: (list) => {
+      const fresh = list.filter((n) => !names.includes(n))
+      if (fresh.length > 0) write([...fresh, ...names])
+    },
   }
 }

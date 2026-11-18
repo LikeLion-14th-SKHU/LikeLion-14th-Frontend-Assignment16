@@ -34,6 +34,36 @@
   --color-soon-soft: #fdf0e3;
 }
 
+/* 다크 모드: 같은 토큰 이름의 값만 바꿔요. 컴포넌트는 dark: 변형 없이 그대로 동작해요.
+   data-theme은 index.html의 인라인 스크립트가 (저장한 설정 ?? 시스템 설정)으로 정해요. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-brand-50: #1b2338;
+  --color-brand-100: #2a3655;
+  --color-brand-500: #7493ee;
+  --color-brand-600: #93abf4;
+  --color-brand-700: #b4c5f8;
+
+  --color-surface: #171a21;
+  --color-canvas: #0f1115;
+  --color-line: #2b303b;
+  --color-ink: #e8ebf0;
+  --color-ink-muted: #9aa3b0;
+
+  --color-apply: #5ab0f0;
+  --color-apply-soft: #12283a;
+  --color-exam: #ad8ff2;
+  --color-exam-soft: #261d3d;
+  --color-result: #4cc797;
+  --color-result-soft: #112f27;
+
+  --color-urgent: #ff7a6e;
+  --color-urgent-soft: #3b1816;
+  --color-soon: #f5a253;
+  --color-soon-soft: #3a2611;
+}
+
 @layer base {
   body {
     @apply bg-canvas font-sans text-ink antialiased;

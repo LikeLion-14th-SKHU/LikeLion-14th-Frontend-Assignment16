@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import SearchBox from '../components/SearchBox.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ScheduleStatus from '../components/ScheduleStatus.jsx'
+import ShareButton from '../components/ShareButton.jsx'
 import DdayBadge from '../components/DdayBadge.jsx'
 import FavoriteButton from '../components/FavoriteButton.jsx'
 import { useFavorites } from '../hooks/useFavorites.js'
@@ -35,9 +36,12 @@ function Home() {
       </section>
 
       <section aria-labelledby="my-dday">
-        <h2 id="my-dday" className="mb-1 text-lg font-bold">
-          ⭐ 내 자격증 D-day
-        </h2>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 id="my-dday" className="text-lg font-bold">
+            ⭐ 내 자격증 D-day
+          </h2>
+          {favorites.length > 0 && <ShareButton names={favorites.map((c) => c.name)} />}
+        </div>
         <p className="mb-3 text-sm text-ink-muted">
           등급(기사·기능사 등) 공통 일정 기준이에요. 종목별 시행 여부는 Q-Net에서 확인하세요.
         </p>

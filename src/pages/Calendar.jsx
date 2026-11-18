@@ -178,7 +178,7 @@ function MonthView({ current, today, byDay, favorites }) {
               >
                 <span
                   className={`inline-flex size-6 items-center justify-center rounded-full tabular-nums ${
-                    isToday ? 'bg-brand-600 font-bold text-white' : ''
+                    isToday ? 'bg-brand-600 font-bold text-surface' : ''
                   }`}
                 >
                   {date.getDate()}
@@ -239,7 +239,7 @@ function EventRow({ event, favorites }) {
           </p>
         ) : (
           <Link
-            to={`/search?q=${encodeURIComponent(event.grade)}`}
+            to={`/search?grade=${encodeURIComponent(event.grade)}`}
             className="mt-0.5 inline-block text-xs font-medium text-brand-600 underline"
           >
             이 등급 자격증 찾기

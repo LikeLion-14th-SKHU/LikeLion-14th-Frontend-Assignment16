@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. 월간 캘린더 (접수·시험·발표를 색으로 구분)
 6. 자격증 상세 (회차별 필기·실기 일정 표)
 
-**선택 기능:** 7 분야별 둘러보기 · 8 `.ics` 내보내기 · 9 공유 링크 · 10 다크 모드
+**선택 기능 (모두 구현):** 7 등급별 둘러보기(`/search?grade=`) · 8 `.ics` 내보내기(상세) · 9 공유 링크(`/share?c=`) · 10 다크 모드
 
 **제외:** 로그인, 푸시·이메일 알림 (서버가 필요해서 제외)
 
@@ -37,7 +37,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 홈 | `/` | 검색창 → 곧 마감 → 내 자격증 D-day 카드 |
 | 검색 | `/search?q=` | 결과 목록 + ⭐ 담기 |
 | 상세 | `/cert/:종목명` | 회차별 일정 카드 + ⭐ 담기 |
-| 캘린더 | `/calendar` | 월 이동, 전체·관심 필터, 월간 그리드 |
+| 캘린더 | `/calendar?month=YYYY-MM&view=mine\|all` | 월 이동, 전체·관심 필터, 월간 그리드 |
+| 공유 | `/share?c=종목명,...` | 공유 받은 목록 + 모두 담기 (탭바에는 없어요) |
 
 **디자인:** 깔끔한 생산성 앱 스타일이에요. 흰 배경, 남색 포인트, Pretendard 글꼴을 써요. 접수·시험·발표는 각각 고정된 색으로 표시하고 모든 화면에서 같은 색을 써요. 긴급도 배지는 D-3 이하 빨강, D-7 이하 주황이에요.
 
@@ -76,6 +77,10 @@ docs/
   기획서.md
   한국산업인력공단_국가자격 종목 목록 정보_*.csv   # 원본 (EUC-KR)
 ```
+
+다크 모드: `src/index.css`의 `:root[data-theme="dark"]`에서 같은 토큰의 값만 바꿔요. 그래서 컴포넌트에 `dark:` 변형을 쓰지 않고, 새 색이 필요하면 두 곳(`@theme`와 다크 블록)에 모두 추가해요. `data-theme`은 `index.html`의 인라인 스크립트가 첫 렌더링 전에 정하고(localStorage `cert-dday:theme` → 시스템 설정 순), `hooks/useTheme.js`가 바꿔요. 흰 글자에는 `text-white` 대신 `text-surface`를 써요.
+
+그 밖의 모듈: `lib/ics.js`(RFC 5545, 75바이트 줄 접기, 고정 UID), `lib/share.js`(공유 링크의 종목명은 `findCert`로 검증해요. 종목명에는 쉼표가 없어요), `components/CertList.jsx`(검색·둘러보기·공유 목록 공통).
 
 디자인 토큰 이름: `brand-*`(남색 포인트), `surface`/`canvas`/`line`/`ink`/`ink-muted`(바탕·글자), `apply`/`exam`/`result`와 각각의 `-soft`(접수·시험·발표), `urgent`/`soon`과 각각의 `-soft`(긴급도). 예: `bg-apply-soft text-apply`. 공통 빈 상태 화면은 `components/EmptyState.jsx`를 써요.
 
