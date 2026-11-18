@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+/* 디자인 토큰: 색은 여기서만 정의하고, 컴포넌트에서는 bg-brand-600 처럼 토큰 이름으로 써요. */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  /* 남색 포인트 */
+  --color-brand-50: #eef2fb;
+  --color-brand-100: #dbe3f6;
+  --color-brand-500: #3456b8;
+  --color-brand-600: #24408f;
+  --color-brand-700: #1b3171;
+
+  /* 바탕과 글자 */
+  --color-surface: #ffffff;
+  --color-canvas: #f5f6f8;
+  --color-line: #e4e7ec;
+  --color-ink: #191f28;
+  --color-ink-muted: #6b7684;
+
+  /* 일정 종류: 캘린더, 카드, 표에서 같은 색을 써요 */
+  --color-apply: #0b74c4; /* 접수 */
+  --color-apply-soft: #e5f2fc;
+  --color-exam: #7445d1; /* 시험 */
+  --color-exam-soft: #f0eafb;
+  --color-result: #0f8a5f; /* 발표 */
+  --color-result-soft: #e3f5ee;
+
+  /* 긴급도 배지: D-3 이하 urgent, D-7 이하 soon */
+  --color-urgent: #d92d20;
+  --color-urgent-soft: #fdecea;
+  --color-soon: #d9690b;
+  --color-soon-soft: #fdf0e3;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+  }
+}

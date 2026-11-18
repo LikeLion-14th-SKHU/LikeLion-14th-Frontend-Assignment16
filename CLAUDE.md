@@ -45,7 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - React 19 + Vite 8, JavaScript(`.jsx`). TypeScript는 쓰지 않아요.
 - Tailwind CSS v4. `vite.config.js`에서 `@tailwindcss/vite` 플러그인으로 연결해요. `tailwind.config.js`나 PostCSS 설정은 없어요. 색과 글꼴 토큰은 `src/index.css`의 `@theme`에 정의해요.
-- `react-router`: 페이지 이동에 써요. 아직 설치하지 않았어요.
+- `react-router`: 페이지 이동에 써요. `react-router` 패키지에서 바로 import해요(`react-router-dom`은 쓰지 않아요). 라우트는 `src/App.jsx`에 있고, 모든 페이지는 `Layout`(헤더 + 하단 탭바) 안에서 렌더링돼요. `vercel.json`이 `/api/` 밖의 모든 경로를 `index.html`로 돌려서 `/cert/...`로 바로 들어와도 동작해요.
 - Vercel: 배포와 Vercel Function(`/api`)에 써요.
 - Oxlint: `react/rules-of-hooks`는 error, `react/only-export-components`는 warn이에요. 컴포넌트 파일에서는 컴포넌트만 export해야 Fast Refresh가 유지돼요.
 
@@ -72,7 +72,7 @@ docs/
   기획서.md
 ```
 
-지금 `src/App.jsx`와 `src/App.css`는 Vite 기본 화면이에요. `App.css`는 `index.css`에서 지워진 CSS 변수(`--accent` 등)를 참조하고 있어요. 새 화면을 만들 때 기본 화면과 `App.css`, `src/assets`의 로고들은 지워요.
+디자인 토큰 이름: `brand-*`(남색 포인트), `surface`/`canvas`/`line`/`ink`/`ink-muted`(바탕·글자), `apply`/`exam`/`result`와 각각의 `-soft`(접수·시험·발표), `urgent`/`soon`과 각각의 `-soft`(긴급도). 예: `bg-apply-soft text-apply`. 공통 빈 상태 화면은 `components/EmptyState.jsx`를 써요.
 
 ## 작업 방식
 
