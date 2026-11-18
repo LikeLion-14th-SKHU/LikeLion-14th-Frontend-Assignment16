@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import EmptyState from '../components/EmptyState.jsx'
+import FavoriteButton from '../components/FavoriteButton.jsx'
 import RoundCard from '../components/RoundCard.jsx'
 import NotFound from './NotFound.jsx'
 import { useExamSchedule } from '../hooks/useExamSchedule.js'
@@ -17,12 +18,15 @@ function CertDetail() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm text-ink-muted">
-          {cert.qualgbNm}
-          {cert.grade && ` · ${scheduleLabel(cert)}`}
-        </p>
-        <h1 className="text-2xl font-bold">{cert.name}</h1>
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm text-ink-muted">
+            {cert.qualgbNm}
+            {cert.grade && ` · ${scheduleLabel(cert)}`}
+          </p>
+          <h1 className="text-2xl font-bold">{cert.name}</h1>
+        </div>
+        <FavoriteButton name={cert.name} size="lg" />
       </header>
 
       {hasSchedule(cert) ? (

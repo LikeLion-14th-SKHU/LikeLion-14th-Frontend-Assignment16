@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router'
 import SearchBox from '../components/SearchBox.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import FavoriteButton from '../components/FavoriteButton.jsx'
 import { certPath, hasSchedule, scheduleLabel, searchCerts } from '../lib/certs.js'
 
 function Search() {
@@ -31,10 +32,10 @@ function Search() {
           ) : (
             <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line">
               {results.map((cert) => (
-                <li key={cert.name}>
+                <li key={cert.name} className="flex items-center pr-2 transition-colors hover:bg-canvas">
                   <Link
                     to={certPath(cert)}
-                    className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-canvas"
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 py-3.5 pr-1 pl-4"
                   >
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{cert.name}</span>
@@ -53,6 +54,7 @@ function Search() {
                       </span>
                     )}
                   </Link>
+                  <FavoriteButton name={cert.name} />
                 </li>
               ))}
             </ul>
