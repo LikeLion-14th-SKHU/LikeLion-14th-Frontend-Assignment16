@@ -1,0 +1,39 @@
+import { Link, Outlet, useLocation } from 'react-router'
+import { GraduationCap } from 'lucide-react'
+import { ICON } from '../lib/icons.js'
+import ErrorBoundary from './ErrorBoundary.jsx'
+import TabBar from './TabBar.jsx'
+import ThemeToggle from './ThemeToggle.jsx'
+
+function Layout() {
+  const location = useLocation()
+  return (
+    <div className="mx-auto flex min-h-dvh max-w-screen-sm flex-col bg-surface">
+      <header className="sticky top-0 z-10 border-b border-line bg-surface/90 backdrop-blur">
+        <div className="flex h-14 items-center justify-between pr-2 pl-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-brand-700">
+            <span
+              aria-hidden="true"
+              className="flex size-7 items-center justify-center rounded-lg bg-brand-600 text-surface"
+            >
+              <GraduationCap size={ICON.md} />
+            </span>
+            자격증 D-day
+          </Link>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      {/* 하단 탭바 높이만큼 아래 여백을 둬요 */}
+      <main className="flex-1 px-4 pt-4 pb-24">
+        <ErrorBoundary key={location.pathname}>
+          <Outlet />
+        </ErrorBoundary>
+      </main>
+
+      <TabBar />
+    </div>
+  )
+}
+
+export default Layout
