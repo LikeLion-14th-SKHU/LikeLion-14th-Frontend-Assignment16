@@ -1,3 +1,4 @@
+import { CloudOff } from 'lucide-react'
 import EmptyState from './EmptyState.jsx'
 
 // 일정 API를 쓰는 화면의 공통 로딩·오류 처리.
@@ -15,7 +16,7 @@ function ScheduleStatus({ status, error, skeleton = 'h-24', children }) {
   }
   if (status === 'error') {
     return (
-      <EmptyState icon="⚠️" title="일정을 불러오지 못했어요">
+      <EmptyState icon={CloudOff} title="일정을 불러오지 못했어요">
         {error?.message}{' '}
         <button
           type="button"

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Share2 } from 'lucide-react'
+import { ICON } from '../lib/icons.js'
 import { shareUrl } from '../lib/share.js'
 
 // 휴대폰에서는 기본 공유 창을, 그 외에는 클립보드 복사를 써요.
@@ -32,9 +34,10 @@ function ShareButton({ names }) {
       <button
         type="button"
         onClick={handleShare}
-        className="inline-flex h-8 items-center gap-1 rounded-lg border border-line px-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-canvas hover:text-ink"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-canvas hover:text-ink"
       >
-        <span aria-hidden="true">🔗</span> 공유
+        <Share2 size={ICON.sm} />
+        공유
       </button>
       <p role="status" className="absolute top-full right-0 z-10 mt-1 whitespace-nowrap">
         {message && (

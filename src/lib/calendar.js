@@ -1,6 +1,6 @@
 import { STEPS } from './schedule.js'
 
-// "2026-11" ↔ { year, month(0~11) }
+// "2026-11" <-> { year, month(0~11) }
 export function parseMonth(value, fallback) {
   const m = /^(\d{4})-(\d{2})$/.exec(value ?? '')
   if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return fallback

@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { TriangleAlert } from 'lucide-react'
 import EmptyState from './EmptyState.jsx'
 
 // 페이지 렌더링 중 예상치 못한 오류가 나도 헤더와 탭바는 남겨 두고 안내를 보여줘요.
@@ -17,7 +18,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.error) {
       return (
-        <EmptyState icon="😵" title="화면을 그리다 문제가 생겼어요">
+        <EmptyState icon={TriangleAlert} title="화면을 그리다 문제가 생겼어요">
           <button
             type="button"
             onClick={() => window.location.reload()}

@@ -1,3 +1,5 @@
+import { CalendarClock, CalendarPlus, CalendarX, Info } from 'lucide-react'
+import { ICON } from '../lib/icons.js'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import EmptyState from '../components/EmptyState.jsx'
@@ -34,7 +36,7 @@ function CertDetail() {
       {hasSchedule(cert) ? (
         <Schedule cert={cert} grade={cert.grade} label={scheduleLabel(cert)} />
       ) : (
-        <EmptyState icon="ℹ️" title="이 자격증은 일정 정보를 제공하지 않아요">
+        <EmptyState icon={Info} title="이 자격증은 일정 정보를 제공하지 않아요">
           {cert.qualgbNm}은 시험일정 API에서 종목별 일정을 구분할 수 없어요. 시행 기관
           홈페이지에서 확인해 주세요.
         </EmptyState>
@@ -53,7 +55,7 @@ function Schedule({ cert, grade, label }) {
 
   const rounds = groupRounds(items.filter((item) => gradeOf(item) === grade))
   if (rounds.length === 0) {
-    return <EmptyState icon="🗓️" title="공고된 일정이 아직 없어요" />
+    return <EmptyState icon={CalendarClock} title="공고된 일정이 아직 없어요" />
   }
 
   const today = startOfToday()
@@ -76,13 +78,14 @@ function Schedule({ cert, grade, label }) {
             title={`남은 일정 ${ics.count}개를 .ics 파일로 받아요`}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-medium transition-colors hover:bg-canvas"
           >
-            <span aria-hidden="true">📅</span> 내 캘린더에 추가
+            <CalendarPlus size={ICON.sm} />
+            내 캘린더에 추가
           </button>
         )}
       </div>
 
       {upcoming.length === 0 && (
-        <EmptyState icon="🗓️" title="남은 일정이 없어요">
+        <EmptyState icon={CalendarX} title="남은 일정이 없어요">
           다음 해 일정은 공고되면 여기에 보여요.
         </EmptyState>
       )}

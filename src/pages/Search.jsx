@@ -1,3 +1,5 @@
+import { ChevronLeft, SearchX } from 'lucide-react'
+import { ICON } from '../lib/icons.js'
 import { Link, useSearchParams } from 'react-router'
 import SearchBox from '../components/SearchBox.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -23,8 +25,9 @@ function Search() {
               {browse.group.label}{' '}
               <span className="text-sm font-medium text-ink-muted">{browse.certs.length}개</span>
             </h2>
-            <Link to="/search" className="text-sm font-medium text-brand-600">
-              ‹ 등급 목록
+            <Link to="/search" className="inline-flex items-center gap-0.5 text-sm font-medium text-brand-600">
+              <ChevronLeft size={ICON.sm} />
+              등급 목록
             </Link>
           </div>
           <CertList certs={browse.certs} />
@@ -62,7 +65,7 @@ function Results({ q }) {
         {results.length === 50 && ' (상위 50건)'}
       </h2>
       {results.length === 0 ? (
-        <EmptyState icon="🤔" title="검색 결과가 없어요">
+        <EmptyState icon={SearchX} title="검색 결과가 없어요">
           자격증 이름 일부만 입력해 보세요. 예: “정보처리”
         </EmptyState>
       ) : (

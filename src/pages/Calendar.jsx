@@ -1,3 +1,6 @@
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
+import InlineStar from '../components/InlineStar.jsx'
+import { ICON } from '../lib/icons.js'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import EmptyState from '../components/EmptyState.jsx'
@@ -52,7 +55,7 @@ function Calendar() {
         </h1>
         <div className="flex items-center gap-1">
           <NavButton label="이전 달" onClick={() => update({ month: formatMonth(addMonths(current, -1)) })}>
-            ‹
+            <ChevronLeft size={ICON.md} />
           </NavButton>
           <button
             type="button"
@@ -62,14 +65,14 @@ function Calendar() {
             오늘
           </button>
           <NavButton label="다음 달" onClick={() => update({ month: formatMonth(addMonths(current, 1)) })}>
-            ›
+            <ChevronRight size={ICON.md} />
           </NavButton>
         </div>
       </div>
 
       <div role="radiogroup" aria-label="보기" className="grid grid-cols-2 rounded-xl bg-canvas p-1 text-sm font-medium">
         {[
-          { value: 'mine', label: '⭐ 관심 등급' },
+          { value: 'mine', label: '관심 등급', icon: Star },
           { value: 'all', label: '전체' },
         ].map((option) => (
           <button
@@ -78,10 +81,11 @@ function Calendar() {
             role="radio"
             aria-checked={view === option.value}
             onClick={() => update({ view: option.value })}
-            className={`h-9 rounded-lg transition ${
+            className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg transition ${
               view === option.value ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
             }`}
           >
+            {option.icon && <option.icon size={ICON.sm} />}
             {option.label}
           </button>
         ))}
@@ -91,11 +95,11 @@ function Calendar() {
 
       <ScheduleStatus status={status} error={error} skeleton="h-80">
         {view === 'mine' && myGrades.length === 0 ? (
-          <EmptyState icon="⭐" title="담은 자격증이 없어요">
+          <EmptyState icon={Star} title="담은 자격증이 없어요">
             <Link to="/search" className="font-medium text-brand-600 underline">
               자격증을 검색
             </Link>
-            해서 ⭐를 누르면 그 등급의 일정만 볼 수 있어요.
+            해서 <InlineStar /> 별 버튼을 누르면 그 등급의 일정만 볼 수 있어요.
           </EmptyState>
         ) : (
           // 달이나 보기가 바뀌면 선택한 날짜를 초기화해요
@@ -118,7 +122,7 @@ function NavButton({ label, onClick, children }) {
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="size-9 rounded-lg border border-line text-lg leading-none hover:bg-canvas"
+      className="inline-flex size-9 items-center justify-center rounded-lg border border-line hover:bg-canvas"
     >
       {children}
     </button>
@@ -230,7 +234,10 @@ function EventRow({ event, favorites }) {
         )}
         {mine.length > 0 ? (
           <p className="mt-0.5 flex flex-wrap gap-x-2 text-xs">
-            <span className="text-ink-muted">⭐ 같은 등급:</span>
+            <span className="inline-flex items-center gap-1 text-ink-muted">
+              <Star size={ICON.xs} />
+              같은 등급:
+            </span>
             {mine.map((c) => (
               <Link key={c.name} to={certPath(c)} className="font-medium text-brand-600 underline">
                 {c.name}

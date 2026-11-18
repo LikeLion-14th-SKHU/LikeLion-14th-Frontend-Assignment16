@@ -35,8 +35,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 페이지 | 주소 | 기능 |
 |---|---|---|
 | 홈 | `/` | 검색창 → 곧 마감 → 내 자격증 D-day 카드 |
-| 검색 | `/search?q=` | 결과 목록 + ⭐ 담기 |
-| 상세 | `/cert/:종목명` | 회차별 일정 카드 + ⭐ 담기 |
+| 검색 | `/search?q=` | 결과 목록 + 별 버튼으로 담기 |
+| 상세 | `/cert/:종목명` | 회차별 일정 카드 + 별 버튼으로 담기 |
 | 캘린더 | `/calendar?month=YYYY-MM&view=mine\|all` | 월 이동, 전체·관심 필터, 월간 그리드 |
 | 공유 | `/share?c=종목명,...` | 공유 받은 목록 + 모두 담기 (탭바에는 없어요) |
 
@@ -84,6 +84,8 @@ docs/
 
 디자인 토큰 이름: `brand-*`(남색 포인트), `surface`/`canvas`/`line`/`ink`/`ink-muted`(바탕·글자), `apply`/`exam`/`result`와 각각의 `-soft`(접수·시험·발표), `urgent`/`soon`과 각각의 `-soft`(긴급도). 예: `bg-apply-soft text-apply`. 공통 빈 상태 화면은 `components/EmptyState.jsx`를 써요.
 
+아이콘: 이모지는 쓰지 않고 `lucide-react`만 써요(문구, 데이터, 주석, 문서 포함). 크기는 `lib/icons.js`의 `ICON`(xs 14, sm 16, md 20, lg 28)으로만 정하고, 선 굵기 2는 `main.jsx`의 `LucideProvider`가 정해요. 색은 `currentColor`라서 `text-*` 토큰을 따라요. 아이콘만 있는 버튼에는 `aria-label`을 붙여요. `EmptyState`의 `icon`에는 문자열이 아니라 아이콘 컴포넌트를 넘겨요(예: `icon={Star}`).
+
 ## 작업 방식
 
 - 기능은 한 번에 하나씩 만들고, 브라우저에서 동작을 확인한 뒤 다음 기능으로 넘어가요.
@@ -109,7 +111,7 @@ docs/
 ## 완료 조건
 
 - 배포된 Vercel URL에서 필수 기능 1~6이 모두 동작해요.
-  - 검색 → 상세 → ⭐ 담기 → 홈 D-day에 반영되는 흐름이 이어져요.
+  - 검색 → 상세 → 별 버튼으로 담기 → 홈 D-day에 반영되는 흐름이 이어져요.
   - 곧 마감 섹션과 긴급도 배지가 날짜에 맞게 표시돼요.
   - 캘린더에 접수·시험·발표가 색으로 구분되고, 일정을 누르면 상세로 이동해요.
 - 모바일 폭(360px)에서 가로 스크롤 없이 사용할 수 있어요.

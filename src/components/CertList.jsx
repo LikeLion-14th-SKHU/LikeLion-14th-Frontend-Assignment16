@@ -1,3 +1,5 @@
+import { ChevronRight } from 'lucide-react'
+import { ICON } from '../lib/icons.js'
 import { Link } from 'react-router'
 import FavoriteButton from './FavoriteButton.jsx'
 import { certPath, hasSchedule, scheduleLabel } from '../lib/certs.js'
@@ -20,9 +22,7 @@ function CertList({ certs }) {
               </span>
             </span>
             {hasSchedule(cert) ? (
-              <span aria-hidden="true" className="shrink-0 text-ink-muted">
-                ›
-              </span>
+              <ChevronRight size={ICON.sm} className="shrink-0 text-ink-muted" />
             ) : (
               <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 text-xs text-ink-muted">
                 일정 미제공

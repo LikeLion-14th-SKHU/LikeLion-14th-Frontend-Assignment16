@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Search } from 'lucide-react'
+import { ICON } from '../lib/icons.js'
 
 // 홈과 검색 페이지에서 함께 써요. 제출하면 /search?q=검색어 로 이동해요.
 function SearchBox({ defaultValue = '', autoFocus = false }) {
@@ -18,12 +20,10 @@ function SearchBox({ defaultValue = '', autoFocus = false }) {
       <label htmlFor="cert-search" className="sr-only">
         자격증 이름 검색
       </label>
-      <span
-        aria-hidden="true"
+      <Search
+        size={ICON.md}
         className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-muted"
-      >
-        🔍
-      </span>
+      />
       <input
         id="cert-search"
         type="search"
