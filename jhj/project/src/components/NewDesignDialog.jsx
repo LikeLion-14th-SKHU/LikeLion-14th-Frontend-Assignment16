@@ -26,7 +26,7 @@ function NewDesignForm({ onCreate }) {
     <form onSubmit={submit} className="flex flex-col gap-4">
       <fieldset>
         <legend className="mb-2 text-sm font-semibold">어디서 시작할까요?</legend>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[{ id: 'empty', name: '빈 도안' }, ...EXAMPLES].map((opt) => {
             const ex = EXAMPLES.find((e) => e.id === opt.id)
             return (

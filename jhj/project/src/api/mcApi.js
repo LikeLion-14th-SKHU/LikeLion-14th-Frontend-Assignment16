@@ -1,6 +1,4 @@
 // mc-api (https://mc-api.bisai.dev) 호출을 한곳에 모은다. 키 없이 브라우저에서 바로 호출(CORS *).
-import { WOOLS } from '../data/wools.js'
-
 export const API_BASE = 'https://mc-api.bisai.dev'
 
 // 남은 크레딧(분당 한도)을 응답 헤더에서 읽는다
@@ -42,35 +40,7 @@ export const textureUrl = (icon) => `${API_BASE}/v1/assets/textures/${icon}`
 export const recipeImageUrl = (wool) =>
   `${API_BASE}/v1/recipes/${wool.id}/image.png?recipe=${wool.recipe}`
 
-// ── 3. 사진 → 양털 도안 (POST /v1/mapart, 1 크레딧) ─────────────
-// 팔레트를 양털 16색의 지도 색으로 제한하고, 블록 배치도(json)를 받는다.
-// rows[y][x] = 블록 id, 투명한 곳은 'air' → 빈칸(null)
-const WOOL_MAP_COLORS = WOOLS.map((w) => w.mapColor).join(',')
-const WOOL_ID_SET = new Set(WOOLS.map((w) => w.id))
-
-export async function convertImageToWool(imageBlob, { size, dither }) {
-  const params = new URLSearchParams({
-    format: 'json',
-    mode: 'flat',
-    width: String(size),
-    height: String(size),
-    dither: dither ? 'floyd' : 'none',
-    colors: WOOL_MAP_COLORS,
-  })
-  const res = await fetch(`${API_BASE}/v1/mapart?${params}`, {
-    method: 'POST',
-    headers: { 'Content-Type': imageBlob.type || 'image/png' },
-    body: imageBlob,
-  })
-  if (!res.ok) throw new Error(await failMessage(res))
-  const data = await res.json()
-  const rows = (data.rows ?? []).slice(-size) // 혹시 붙는 받침 줄은 빼고 마지막 size 줄만
-  const grid = rows.flat().map((id) => (WOOL_ID_SET.has(id) ? id : null))
-  if (grid.length !== size * size) throw new Error('mc-api 변환 결과의 크기가 맞지 않아요.')
-  return { grid, credits: creditsOf(res) }
-}
-
-// ── 4. 게임 속 3D 렌더 (POST /v1/render/3d/scene, 2 + 블록 16개당 1 크레딧, 최대 50) ──
+// ── 3. 게임 속 3D 렌더 (POST /v1/render/3d/scene, 2 + 블록 16개당 1 크레딧, 최대 50) ──
 // 도안을 세워 놓은 벽으로 보고 블록 좌표로 바꾼다. 16 유닛 = 블록 1개, y는 위쪽.
 export const VIEWS = {
   front: { label: '정면', yaw: 0, pitch: 0 },

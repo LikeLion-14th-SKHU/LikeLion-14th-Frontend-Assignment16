@@ -1,21 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DEFAULT_SIZE, GRID_SIZES } from '../data/patterns.js'
-import { convertImageToWool } from '../api/mcApi.js'
-import { loadImageFile, toSquarePng } from '../utils/imageTools.js'
+import { GRID_SIZES } from '../data/patterns.js'
+import { imageToWool } from '../utils/woolConvert.js'
+import { loadImageFile } from '../utils/imageTools.js'
 import { countMaterials } from '../utils/countMaterials.js'
+import { countColors } from '../utils/colors.js'
 import Modal from './Modal.jsx'
 import DesignThumb from './DesignThumb.jsx'
 
-// 사진 → 양털 도안. 변환은 mc-api /v1/mapart 가 양털 16색 팔레트로 해 준다.
-function PhotoImportForm({ onCreate, onCredits }) {
+const PHOTO_SIZE = 48 // 사진은 칸이 많을수록 알아보기 쉬워서 기본을 크게
+
+// 사진 → 양털 도안. 변환은 이 브라우저 안에서 바로 계산하므로 옵션을 바꾸면 결과가 즉시 바뀐다.
+// (사진은 어디로도 보내지 않는다. 색 기준은 mc-api 텍스처에서 구한 실제 양털 색)
+function PhotoImportForm({ onCreate }) {
   const [file, setFile] = useState(null)
   const [image, setImage] = useState(null) // { img, url }
-  const [size, setSize] = useState(DEFAULT_SIZE)
+  const [size, setSize] = useState(PHOTO_SIZE)
   const [fit, setFit] = useState('crop')
+  const [boost, setBoost] = useState(true)
   const [dither, setDither] = useState(false)
-  const [status, setStatus] = useState('idle') // idle | converting | done | error
+  const [maxColors, setMaxColors] = useState(16)
   const [error, setError] = useState('')
-  const [result, setResult] = useState(null) // { grid, size }
 
   useEffect(() => {
     const url = image?.url
@@ -25,45 +29,32 @@ function PhotoImportForm({ onCreate, onCredits }) {
   }, [image])
 
   const pickFile = async (f) => {
-    setResult(null)
     setError('')
-    setStatus('idle')
     if (!f) return
     try {
       setImage(await loadImageFile(f))
       setFile(f)
     } catch (err) {
-      setStatus('error')
       setError(err.message)
     }
   }
 
-  const convert = async () => {
-    if (!image) return
-    setStatus('converting')
-    setError('')
+  const grid = useMemo(() => {
+    if (!image) return null
     try {
-      const blob = await toSquarePng(image.img, fit)
-      const { grid, credits } = await convertImageToWool(blob, { size, dither })
-      setResult({ grid, size })
-      setStatus('done')
-      onCredits(credits)
-    } catch (err) {
-      setStatus('error')
-      setError(
-        err instanceof TypeError
-          ? 'mc-api에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'
-          : err.message,
-      )
+      return imageToWool(image.img, size, { fit, dither, boost, maxColors })
+    } catch {
+      return null
     }
-  }
+  }, [image, size, fit, dither, boost, maxColors])
 
-  const total = useMemo(
-    () => (result ? Object.values(countMaterials(result.grid)).reduce((a, b) => a + b, 0) : 0),
-    [result],
-  )
-  // 옵션을 바꾸면 결과가 지금 옵션과 다를 수 있다
-  const outdated = result && result.size !== size
+  const stats = useMemo(() => {
+    if (!grid) return null
+    return {
+      total: Object.values(countMaterials(grid)).reduce((a, b) => a + b, 0),
+      colors: countColors(grid),
+    }
+  }, [grid])
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,26 +81,28 @@ function PhotoImportForm({ onCreate, onCredits }) {
             <figcaption className="text-xs text-gray-500">원본</figcaption>
           </figure>
           <figure className="flex flex-col items-center gap-1">
-            {result ? (
+            {grid ? (
               <DesignThumb
-                grid={result.grid}
-                size={result.size}
-                className={`aspect-square w-full rounded border border-gray-200 ${outdated ? 'opacity-40' : ''}`}
+                grid={grid}
+                size={size}
+                className="aspect-square w-full rounded border border-gray-200"
               />
             ) : (
               <div className="flex aspect-square w-full items-center justify-center rounded border border-dashed border-gray-300 p-2 text-center text-xs text-gray-500">
-                {status === 'converting' ? 'mc-api가 양털로 바꾸는 중…' : '변환하면 여기에 나와요'}
+                변환하지 못했어요
               </div>
             )}
             <figcaption className="text-xs text-gray-500">
-              {result ? `양털 도안 · ${result.size}×${result.size} · ${total}개` : '양털 도안'}
+              {stats ? `양털 도안 · ${size}×${size} · ${stats.total}개 · ${stats.colors}색` : '양털 도안'}
             </figcaption>
           </figure>
         </div>
       )}
 
       <fieldset>
-        <legend className="mb-1 text-sm font-semibold">크기 (한 칸 = 양털 1개)</legend>
+        <legend className="mb-1 text-sm font-semibold">
+          크기 <span className="font-normal text-gray-500">(한 칸 = 양털 1개 · 사진은 48 이상이 알아보기 쉬워요)</span>
+        </legend>
         <div className="flex gap-1">
           {GRID_SIZES.map((s) => (
             <button
@@ -125,18 +118,40 @@ function PhotoImportForm({ onCreate, onCredits }) {
         </div>
       </fieldset>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-semibold">
+          최대 색상 <span className="tabular-nums">{maxColors}</span>가지
+          <span className="font-normal text-gray-500"> (적을수록 모을 양털 종류가 줄어요)</span>
+        </span>
+        <input
+          type="range"
+          min={2}
+          max={16}
+          step={1}
+          value={maxColors}
+          onChange={(e) => setMaxColors(Number(e.target.value))}
+          className="w-full accent-gray-800"
+        />
+      </label>
+
+      <div className="flex flex-col gap-2 text-sm">
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          <label className="flex items-center gap-1.5">
+            <input type="radio" name="fit" checked={fit === 'crop'} onChange={() => setFit('crop')} />
+            가운데 잘라 꽉 채우기
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input type="radio" name="fit" checked={fit === 'contain'} onChange={() => setFit('contain')} />
+            전체 보이기 (남는 곳은 빈칸)
+          </label>
+        </div>
         <label className="flex items-center gap-1.5">
-          <input type="radio" name="fit" checked={fit === 'crop'} onChange={() => setFit('crop')} />
-          가운데 잘라 꽉 채우기
-        </label>
-        <label className="flex items-center gap-1.5">
-          <input type="radio" name="fit" checked={fit === 'contain'} onChange={() => setFit('contain')} />
-          전체 보이기 (남는 곳은 빈칸)
+          <input type="checkbox" checked={boost} onChange={(e) => setBoost(e.target.checked)} />
+          선명하게 (밝기 범위를 넓히고 색을 또렷하게)
         </label>
         <label className="flex items-center gap-1.5">
           <input type="checkbox" checked={dither} onChange={(e) => setDither(e.target.checked)} />
-          디더링 (사진처럼 부드럽게, 대신 칸이 지저분해짐)
+          디더링 (그라데이션을 격자무늬로 표현)
         </label>
       </div>
 
@@ -146,41 +161,32 @@ function PhotoImportForm({ onCreate, onCredits }) {
         </p>
       )}
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={convert}
-          disabled={!image || status === 'converting'}
-          className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-800 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {result ? '다시 변환' : '양털로 변환'} <span className="text-xs font-normal text-gray-500">(1 크레딧)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            onCreate({
-              name: (file?.name ?? '사진').replace(/\.[^.]+$/, '').slice(0, 40) || '사진 도안',
-              size: result.size,
-              grid: result.grid,
-            })
-          }
-          disabled={!result || status === 'converting'}
-          className="flex-1 rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          새 도안으로 저장
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() =>
+          onCreate({
+            name: (file?.name ?? '사진').replace(/\.[^.]+$/, '').slice(0, 40) || '사진 도안',
+            size,
+            grid,
+          })
+        }
+        disabled={!grid}
+        className="rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        새 도안으로 저장
+      </button>
       <p className="text-xs text-gray-500">
-        사진은 mc-api로 보내져 양털 16색으로 변환돼요. 저장된 뒤에는 그림판에서 자유롭게 고칠 수 있어요.
+        변환은 이 브라우저 안에서 이뤄지고 사진은 어디로도 보내지지 않아요. 저장한 뒤에는 그림판에서 자유롭게 고칠 수
+        있어요.
       </p>
     </div>
   )
 }
 
-function PhotoImportDialog({ open, onClose, onCreate, onCredits }) {
+function PhotoImportDialog({ open, onClose, onCreate }) {
   return (
     <Modal open={open} onClose={onClose} title="사진으로 도안 만들기">
-      <PhotoImportForm onCreate={onCreate} onCredits={onCredits} />
+      <PhotoImportForm onCreate={onCreate} />
     </Modal>
   )
 }

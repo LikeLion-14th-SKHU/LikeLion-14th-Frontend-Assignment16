@@ -7,13 +7,15 @@
 
 /* 캔버스 그림판이 읽어 가는 공통 색 (양털 색은 wools.js에서만) */
 :root {
-  --canvas-line: rgb(0 0 0 / 0.12);
-  --canvas-line-strong: rgb(0 0 0 / 0.38);
+  --canvas-line: rgb(0 0 0 / 0.22);
+  --canvas-line-strong: rgb(0 0 0 / 0.55);
   --canvas-checker-a: #ffffff;
   --canvas-checker-b: #e5e7eb;
   --canvas-cursor: #111827;
   --canvas-cursor-inner: #ffffff;
   --canvas-dim: rgb(243 244 246 / 0.75);
+  --canvas-band: rgb(17 24 39 / 0.08);
+  --canvas-erase: rgb(220 38 38 / 0.45);
 }
 
 /* 16px 양털 텍스처를 크게 키워도 흐려지지 않게 */

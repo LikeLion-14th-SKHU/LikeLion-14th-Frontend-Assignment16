@@ -5,6 +5,7 @@ import { lineCells } from '../utils/paint.js'
 
 // 큰 그림판 (최대 64×64 = 4,096칸)을 canvas 하나로 그린다.
 // - 클릭/드래그: 칠하기 (빠르게 끌어도 칸이 빠지지 않게 직선으로 잇는다)
+// - 마우스를 올리면: 가로·세로 띠 + 지금 고른 양털이 어떻게 찍힐지 미리 보여 준다
 // - 채우기 도구: 같은 색으로 이어진 영역 한 번에
 // - 우클릭 또는 Alt+클릭: 스포이트 (그 칸의 색 고르기)
 // - 키보드: 그림판에 포커스 → 방향키 이동, Enter/Space 칠하기, 위치는 스크린리더로 읽어 준다
@@ -25,10 +26,10 @@ function describe(grid, size, i) {
 // 굵은 안내선 간격: 작은 그림판은 4칸, 큰 그림판은 8칸마다
 const majorStep = (size) => (size <= 16 ? 4 : 8)
 
-function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highlightRow }) {
+function PixelGrid({ grid, size, images, tool, selected, onPaint, onFill, onPick, highlightRow }) {
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
-  const baseRef = useRef(null) // 칸 그림을 미리 그려 둔 캔버스 (호버 때마다 4,096칸을 다시 그리지 않게)
+  const baseRef = useRef(null) // 칸 그림을 미리 그려 둔 캔버스 (마우스를 움직일 때마다 4,096칸을 다시 그리지 않게)
   const strokeRef = useRef(null) // { id, last }
   const strokeCounter = useRef(0)
   const [px, setPx] = useState(0)
@@ -75,12 +76,9 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
           ctx.fillRect(x, y, w, h)
         }
       } else {
-        ctx.fillStyle = checkerA
+        // 빈칸은 칸마다 번갈아 밝기를 달리해서, 칸 하나하나가 또렷하게 보이게 한다
+        ctx.fillStyle = (r + c) % 2 === 0 ? checkerA : checkerB
         ctx.fillRect(x, y, w, h)
-        ctx.fillStyle = checkerB
-        const hw = Math.ceil(w / 2), hh = Math.ceil(h / 2)
-        ctx.fillRect(x, y, hw, hh)
-        ctx.fillRect(x + hw, y + hh, w - hw, h - hh)
       }
     }
 
@@ -111,39 +109,74 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
     }
   }, [grid, size, images, px, highlightRow])
 
-  // 2) 화면 = 칸 그림 + 호버/키보드 커서 표시
+  // 2) 화면 = 칸 그림 + 마우스/키보드 위치 표시 (가로·세로 띠, 찍힐 양털 미리보기, 테두리)
   useEffect(() => {
     const canvas = canvasRef.current
     const base = baseRef.current
     if (!canvas || !base || px === 0) return
     const ctx = canvas.getContext('2d')
+    ctx.imageSmoothingEnabled = false
     ctx.drawImage(base, 0, 0)
     const W = canvas.width
     const cell = W / size
-    const mark = (i, thick) => {
+    const dpr = window.devicePixelRatio || 1
+    const edge = (k) => Math.round(k * cell)
+
+    const box = (i) => {
       const r = Math.floor(i / size), c = i % size
-      const t = Math.max(2, Math.round(thick * (window.devicePixelRatio || 1)))
-      const x = Math.round(c * cell), y = Math.round(r * cell)
-      const s = Math.round((c + 1) * cell) - x
-      ctx.fillStyle = cssVar(canvas, '--canvas-cursor-inner')
-      ctx.fillRect(x - t, y - t, s + 2 * t, t)
-      ctx.fillRect(x - t, y + s, s + 2 * t, t)
-      ctx.fillRect(x - t, y, t, s)
-      ctx.fillRect(x + s, y, t, s)
-      ctx.fillStyle = cssVar(canvas, '--canvas-cursor')
-      ctx.fillRect(x, y, s, t / 2)
-      ctx.fillRect(x, y + s - t / 2, s, t / 2)
-      ctx.fillRect(x, y, t / 2, s)
-      ctx.fillRect(x + s - t / 2, y, t / 2, s)
+      return { r, c, x: edge(c), y: edge(r), w: edge(c + 1) - edge(c), h: edge(r + 1) - edge(r) }
     }
-    if (hover !== null) mark(hover, 1.5)
-    if (focused && cursor !== hover) mark(cursor, 2)
+    const outline = (b, thick) => {
+      const t = Math.max(2, Math.round(thick * dpr))
+      ctx.fillStyle = cssVar(canvas, '--canvas-cursor-inner')
+      ctx.fillRect(b.x - t, b.y - t, b.w + 2 * t, t)
+      ctx.fillRect(b.x - t, b.y + b.h, b.w + 2 * t, t)
+      ctx.fillRect(b.x - t, b.y, t, b.h)
+      ctx.fillRect(b.x + b.w, b.y, t, b.h)
+      ctx.fillStyle = cssVar(canvas, '--canvas-cursor')
+      const u = Math.max(1, Math.round(t / 2))
+      ctx.fillRect(b.x, b.y, b.w, u)
+      ctx.fillRect(b.x, b.y + b.h - u, b.w, u)
+      ctx.fillRect(b.x, b.y, u, b.h)
+      ctx.fillRect(b.x + b.w - u, b.y, u, b.h)
+    }
+
+    const target = hover ?? (focused ? cursor : null)
+    if (target !== null) {
+      const b = box(target)
+      // 가로·세로 띠: 눈금자와 맞춰 보기 쉽게
+      ctx.fillStyle = cssVar(canvas, '--canvas-band')
+      ctx.fillRect(0, b.y, W, b.h)
+      ctx.fillRect(b.x, 0, b.w, W)
+      // 붓: 지금 고른 양털이 이렇게 찍혀요 (지우개는 지워질 칸을 표시)
+      if (tool === 'brush') {
+        ctx.globalAlpha = 0.75
+        if (selected) {
+          const img = images[selected]
+          if (img) ctx.drawImage(img, b.x, b.y, b.w, b.h)
+          else {
+            ctx.fillStyle = WOOL_BY_ID[selected].fallback
+            ctx.fillRect(b.x, b.y, b.w, b.h)
+          }
+        } else {
+          ctx.fillStyle = cssVar(canvas, '--canvas-erase')
+          ctx.fillRect(b.x, b.y, b.w, b.h)
+        }
+        ctx.globalAlpha = 1
+      }
+      outline(b, 2)
+    }
+    if (focused && cursor !== target) outline(box(cursor), 2)
   })
 
   const cellAt = (e) => {
-    const rect = canvasRef.current.getBoundingClientRect()
-    const c = Math.floor(((e.clientX - rect.left) / rect.width) * size)
-    const r = Math.floor(((e.clientY - rect.top) / rect.height) * size)
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    // 테두리(border)를 뺀 안쪽 영역 기준으로 칸을 계산한다
+    const bw = canvas.clientLeft
+    const inner = rect.width - bw * 2
+    const c = Math.floor(((e.clientX - rect.left - bw) / inner) * size)
+    const r = Math.floor(((e.clientY - rect.top - bw) / inner) * size)
     if (c < 0 || r < 0 || c >= size || r >= size) return null
     return r * size + c
   }
@@ -156,9 +189,12 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
       return
     }
     if (e.button !== 0) return
+    e.preventDefault() // 끌 때 글자가 선택되거나 이미지가 끌려가지 않게
+    e.currentTarget.focus({ preventScroll: true })
     e.currentTarget.setPointerCapture(e.pointerId)
     const id = ++strokeCounter.current
     setCursor(i)
+    setHover(i)
     if (tool === 'fill') {
       onFill(i, id)
       return
@@ -189,6 +225,7 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
       if (nr < 0 || nc < 0 || nr >= size || nc >= size) return
       const next = nr * size + nc
       setCursor(next)
+      setHover(null)
       setAnnounce(describe(grid, size, next).aria)
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -206,7 +243,7 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
   return (
     <div className="w-full">
       <div className="flex">
-        <span className="w-7 shrink-0" />
+        <span className="w-9 shrink-0" />
         {/* 위 눈금: 왼쪽에서 몇 번째 */}
         <div className="relative h-4 flex-1 text-[10px] text-gray-500 tabular-nums" aria-hidden="true">
           {labels.map((k) => (
@@ -222,7 +259,7 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
       </div>
       <div className="flex">
         {/* 왼쪽 눈금: 아래에서 몇 층 */}
-        <div className="relative w-7 shrink-0 text-[10px] text-gray-500 tabular-nums" aria-hidden="true">
+        <div className="relative w-9 shrink-0 text-[10px] text-gray-500 tabular-nums" aria-hidden="true">
           {labels.map((k) => {
             const row = size - 1 - k
             return (
@@ -252,15 +289,17 @@ function PixelGrid({ grid, size, images, tool, onPaint, onFill, onPick, highligh
             onKeyDown={handleKeyDown}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className={`block touch-none border border-gray-300 outline-none focus-visible:ring-4 focus-visible:ring-gray-400 ${
+            className={`block touch-none border border-gray-400 select-none focus-visible:ring-4 focus-visible:ring-gray-400 focus-visible:outline-none ${
               tool === 'fill' ? 'cursor-cell' : 'cursor-crosshair'
             }`}
             style={{ width: px, height: px }}
           />
         </div>
       </div>
-      <p id="grid-help" className="mt-2 min-h-5 pl-7 text-sm text-gray-600">
-        {info !== null ? describe(grid, size, info).text : '끌면서 칠할 수 있어요 · 우클릭은 스포이트 · Ctrl+Z는 되돌리기'}
+      <p id="grid-help" className="mt-2 min-h-5 pl-9 text-sm text-gray-600">
+        {info !== null
+          ? describe(grid, size, info).text
+          : '끌면서 칠해요 · B 붓 · F 채우기 · E 지우개 · 우클릭 스포이트 · Ctrl+Z 되돌리기'}
       </p>
       <p className="sr-only" aria-live="polite">
         {announce}

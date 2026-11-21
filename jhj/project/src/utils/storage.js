@@ -33,6 +33,8 @@ function readDesign(raw) {
     size: raw.size,
     grid,
     updatedAt: Number(raw.updatedAt) || 0,
+    // 제작 체크리스트: 다 놓았다고 표시한 층 번호
+    done: Array.isArray(raw.done) ? raw.done.filter((n) => Number.isInteger(n) && n >= 1 && n <= raw.size) : [],
   }
 }
 
@@ -41,7 +43,7 @@ function readLegacy() {
   const grid = data?.grid
   if (data?.version !== 1 || !Array.isArray(grid) || grid.length !== 256) return null
   if (!grid.every((v) => v === null || WOOL_IDS.includes(v))) return null
-  return { id: newId(), name: '예전에 저장한 도안', size: 16, grid, updatedAt: Date.now() }
+  return { id: newId(), name: '예전에 저장한 도안', size: 16, grid, updatedAt: Date.now(), done: [] }
 }
 
 /**
@@ -77,12 +79,13 @@ export function saveLibrary(designs, currentId) {
     const data = {
       version: 2,
       currentId,
-      designs: designs.map(({ id, name, size, grid, updatedAt }) => ({
+      designs: designs.map(({ id, name, size, grid, updatedAt, done }) => ({
         id,
         name,
         size,
         cells: encodeGrid(grid),
         updatedAt,
+        done,
       })),
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))

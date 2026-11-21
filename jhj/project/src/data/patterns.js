@@ -79,7 +79,30 @@ const HEART_ROWS = [
 const LEGEND = { '.': null, R: 'red_wool', P: 'pink_wool' }
 const createHeart = () => HEART_ROWS.join('').split('').map((ch) => LEGEND[ch])
 
+// 16×16 크리퍼 얼굴 (8×8 얼굴을 2배로 키우고, 초록 얼룩은 칸마다 정해진 규칙으로 섞는다)
+const CREEPER_FACE = [
+  'GGGGGGGG',
+  'GGGGGGGG',
+  'GKKGGKKG',
+  'GKKGGKKG',
+  'GGGKKGGG',
+  'GGKKKKGG',
+  'GGKKKKGG',
+  'GGKGGKGG',
+]
+const createCreeper = () => {
+  const grid = []
+  for (let r = 0; r < 16; r++) {
+    for (let c = 0; c < 16; c++) {
+      if (CREEPER_FACE[r >> 1][c >> 1] === 'K') grid.push('black_wool')
+      else grid.push((r * 7 + c * 13 + ((r * c) % 5)) % 5 < 2 ? 'green_wool' : 'lime_wool')
+    }
+  }
+  return grid
+}
+
 export const EXAMPLES = [
   { id: 'penguin', name: '펭귄 예시', size: 32, create: createPenguin },
+  { id: 'creeper', name: '크리퍼 얼굴', size: 16, create: createCreeper },
   { id: 'heart', name: '하트 예시', size: 16, create: createHeart },
 ]

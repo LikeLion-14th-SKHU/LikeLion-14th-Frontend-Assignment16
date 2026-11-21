@@ -4,6 +4,7 @@ import DesignLibrary from './components/DesignLibrary.jsx'
 import PixelGrid from './components/PixelGrid.jsx'
 import Palette from './components/Palette.jsx'
 import MaterialTable from './components/MaterialTable.jsx'
+import ExportPanel from './components/ExportPanel.jsx'
 import BuildGuide from './components/BuildGuide.jsx'
 import Preview3D from './components/Preview3D.jsx'
 import NewDesignDialog from './components/NewDesignDialog.jsx'
@@ -30,7 +31,14 @@ function textureMessage(status, failedCount) {
   return ''
 }
 
-const makeDesign = ({ name, size, grid }) => ({ id: newId(), name, size, grid, updatedAt: Date.now() })
+const makeDesign = ({ name, size, grid }) => ({
+  id: newId(),
+  name,
+  size,
+  grid,
+  updatedAt: Date.now(),
+  done: [], // 제작 체크리스트: 다 놓은 층
+})
 
 // 처음 실행: 저장된 보관함 → 없으면 펭귄 예시 하나로 시작
 function initStudio() {
@@ -72,15 +80,23 @@ function App() {
   }, [studio.designs, studio.currentId])
 
   // 지금 도안의 grid 를 바꾼다. 같은 드래그(strokeId) 안에서는 되돌리기 기록을 한 번만 남긴다.
+  // 칠한 층은 다시 "아직 안 놓음"으로 돌려 놓는다(그림이 바뀌었으니 다시 확인하도록).
   const changeGrid = (cellsOf, value, strokeId) =>
     setStudio((s) => {
       const d = s.designs.find((x) => x.id === s.currentId)
-      const next = applyCells(d.grid, cellsOf(d.grid), value)
+      const cells = cellsOf(d.grid)
+      const next = applyCells(d.grid, cells, value)
       if (next === d.grid) return s // 바뀐 칸이 없으면 상태도 그대로
+      const touched = new Set()
+      for (const i of cells) if (next[i] !== d.grid[i]) touched.add(d.size - Math.floor(i / d.size))
       const sameStroke = strokeId !== undefined && s.stroke === strokeId
       return {
         ...s,
-        designs: s.designs.map((x) => (x.id === d.id ? { ...x, grid: next, updatedAt: Date.now() } : x)),
+        designs: s.designs.map((x) =>
+          x.id === d.id
+            ? { ...x, grid: next, updatedAt: Date.now(), done: x.done.filter((l) => !touched.has(l)) }
+            : x,
+        ),
         past: sameStroke ? s.past : [...s.past.slice(-(UNDO_LIMIT - 1)), d.grid],
         stroke: strokeId ?? null,
       }
@@ -101,18 +117,37 @@ function App() {
       }
     })
 
-  // Ctrl+Z / ⌘+Z 되돌리기 (입력칸에서는 그 칸의 되돌리기를 쓴다)
+  // 단축키: Ctrl/⌘+Z 되돌리기, B 붓, F 채우기, E 지우개 (입력칸·대화상자 안에서는 쓰지 않는다)
   useEffect(() => {
     const onKey = (e) => {
-      if (e.target.closest?.('input, textarea')) return
+      if (e.target.closest?.('input, textarea, select, dialog')) return
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
         e.preventDefault()
         undo()
+        return
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      const key = e.key.toLowerCase()
+      if (key === 'b') setTool('brush')
+      else if (key === 'f') setTool('fill')
+      else if (key === 'e') {
+        setTool('brush')
+        setSelected(null)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // ── 제작 체크리스트 ──
+  const updateCurrent = (fn) =>
+    setStudio((s) => ({ ...s, designs: s.designs.map((x) => (x.id === s.currentId ? fn(x) : x)) }))
+  const toggleDone = (layer) =>
+    updateCurrent((x) => ({
+      ...x,
+      done: x.done.includes(layer) ? x.done.filter((l) => l !== layer) : [...x.done, layer],
+    }))
+  const clearDone = () => updateCurrent((x) => ({ ...x, done: [] }))
 
   // ── 보관함 ──
   const openDesign = (id) => {
@@ -181,7 +216,7 @@ function App() {
           aria-label={`그림판: ${current.name}`}
           className="rounded-lg bg-white p-3 shadow-sm sm:p-4 lg:col-start-1 lg:row-start-1"
         >
-          <div className="mb-2 flex items-baseline gap-2 pl-7">
+          <div className="mb-2 flex items-baseline gap-2 pl-9">
             <h2 className="truncate font-semibold">{current.name}</h2>
             <span className="text-sm text-gray-500">
               {size}×{size} · 양털 {blockCount}개
@@ -192,6 +227,7 @@ function App() {
             size={size}
             images={images}
             tool={tool}
+            selected={selected}
             onPaint={paint}
             onFill={fill}
             onPick={(id) => {
@@ -212,12 +248,24 @@ function App() {
             onTextureError={markFailed}
           />
           <MaterialTable counts={counts} textures={textures} onTextureError={markFailed} />
+          <ExportPanel
+            name={current.name}
+            grid={grid}
+            size={size}
+            images={images}
+            counts={counts}
+            blockCount={blockCount}
+            onNotice={setNotice}
+          />
           <Preview3D grid={grid} size={size} blockCount={blockCount} onCredits={setCredits} />
         </aside>
 
         <div className="lg:col-start-1 lg:row-start-2">
           <BuildGuide
             layers={layers}
+            done={current.done}
+            onToggleDone={toggleDone}
+            onClearDone={clearDone}
             textures={textures}
             onTextureError={markFailed}
             highlightRow={highlightRow}
@@ -231,7 +279,6 @@ function App() {
         open={dialog === 'photo'}
         onClose={() => setDialog(null)}
         onCreate={(d) => addDesign(d, `사진으로 '${d.name}' 도안을 만들었어요.`)}
-        onCredits={setCredits}
       />
     </div>
   )
