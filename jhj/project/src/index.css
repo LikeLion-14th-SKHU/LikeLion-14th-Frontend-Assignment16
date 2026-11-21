@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-pixel: "Galmuri11", monospace;
+}
+
+/* 16px 양털 텍스처를 크게 키워도 흐려지지 않게 */
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* 빈칸 체크무늬: 흰 양털과 구분 */
+.checker {
+  background-color: #fff;
+  background-image: conic-gradient(#e5e7eb 25%, transparent 0 50%, #e5e7eb 0 75%, transparent 0);
+  background-size: 50% 50%;
+}
