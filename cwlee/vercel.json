@@ -1,0 +1,4 @@
+{
+  "framework": "vite",
+  "rewrites": [{ "source": "/games/:path*", "destination": "/index.html" }]
+}
