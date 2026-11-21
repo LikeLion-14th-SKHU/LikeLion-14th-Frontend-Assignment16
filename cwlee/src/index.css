@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css" layer(base);
+
+@theme {
+  --font-sans: "Pretendard Variable", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Pretendard Variable", "Malgun Gothic", sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply m-0 min-h-screen min-w-0 bg-[#f2f3f4] font-sans text-stone-950 antialiased;
+    background-image: radial-gradient(ellipse 65rem 36rem at 50% 0%, #e8effc, transparent 100%);
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-blue-700;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-md border border-[#dedfe2] bg-linear-to-br from-white to-[#f8faff] p-4 sm:p-6;
+  }
+
+  .field {
+    @apply min-h-11 rounded-md border border-stone-400 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500;
+  }
+
+  .action {
+    @apply min-h-11 cursor-pointer rounded-md bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800;
+  }
+
+  .section-title {
+    @apply flex items-center gap-2 border-b border-blue-200 pb-3 font-display text-xl font-medium tracking-tight;
+  }
+
+  .section-title::before {
+    @apply h-3 w-2.5 shrink-0 -skew-x-12 bg-blue-700 content-[""];
+  }
+}
