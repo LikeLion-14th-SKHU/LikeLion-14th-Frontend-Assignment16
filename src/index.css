@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root { font-family: var(--font-sans); color: #29394e; background: #f5f7fb; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+body { margin: 0; min-width: 320px; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.panel { border: 1px solid rgba(224, 231, 241, .95); border-radius: 25px; background: #fff; box-shadow: 0 8px 36px rgba(34, 52, 80, .035); }
+.eyebrow { color: #90a1b7; font-weight: 800; font-size: 10px; letter-spacing: .17em; }
+.sky-panel { background: linear-gradient(115deg,#203b64 0%,#335983 58%,#5b86b7 100%); }
+.weather-orb { background: radial-gradient(circle at 50% 50%,rgba(255,232,187,.33),rgba(255,255,255,.06) 43%, transparent 70%); }
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
